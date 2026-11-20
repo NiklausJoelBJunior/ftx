@@ -1,9 +1,424 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FTX — Farming made simpler</title>
-  <style>body{font-family:Arial,sans-serif;margin:0;color:#16351f;background:#f5faf5}main{max-width:760px;margin:0 auto;padding:72px 24px}.brand{display:flex;align-items:center;gap:12px}.brand img{width:52px;height:52px;border-radius:12px}h1{font-size:52px;margin:0 0 12px;color:#166534}p{font-size:18px;line-height:1.6}.card{background:#fff;border-radius:14px;padding:28px;margin-top:30px;box-shadow:0 8px 24px #16653412}a{display:inline-block;background:#166534;color:#fff;padding:13px 20px;border-radius:7px;text-decoration:none;font-weight:bold}#version{color:#64748b;font-size:14px}</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#14532d" />
+  <meta name="description" content="FTX helps farmers track daily crop prices, sell harvests directly, plan planting windows, and read agricultural news — all in one Android app." />
+  <title>FTX — Smart Market Prices & Planting Guidance for Farmers</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: { DEFAULT: '#14532d', deep: '#166534', mid: '#15803d' },
+            harvest: { DEFAULT: '#d97706', soft: '#f59e0b' },
+            stone: { bg: '#fafaf9', soft: '#f5f5f4' },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    /* Prevents layout shift while Tailwind CDN loads */
+    [data-tailwind]:not([data-tailwind="done"]) { visibility: hidden; }
+    /* Subtle fade-in for hero phone */
+    @keyframes floatIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .float-in { animation: floatIn 0.7s ease-out both; }
+  </style>
 </head>
-<body><main><div class="brand"><img src="./assets/ftx-logo.svg" alt="FTX logo"><p>FTX FARMING</p></div><h1>Grow with better information.</h1><p>Market prices, planting guidance, crop listings, farmer profiles, and agricultural news in one simple app.</p><section class="card"><h2>Get the FTX app</h2><p>Download the Android app to manage your farm from anywhere.</p><a id="download" href="./app/FTX.apk" download>Download FTX</a><p id="version">Latest version information is loading...</p></section></main><script>fetch('./app/version.json').then(r=>r.ok?r.json():null).then(v=>{if(v){document.getElementById('version').textContent='Version '+v.version+' · '+v.updated}}).catch(()=>{document.getElementById('version').textContent='Latest Android build'})</script></body>
+
+<body class="bg-stone-bg text-forest antialiased">
+
+  <!-- ============================================================
+       STICKY NAVBAR
+       ============================================================ -->
+  <header class="sticky top-0 z-50 bg-stone-bg/90 backdrop-blur-md border-b border-stone-200">
+    <nav class="max-w-6xl mx-auto flex items-center justify-between px-5 py-3 md:px-8">
+      <!-- Brand mark -->
+      <a href="#" class="flex items-center gap-2.5 group" aria-label="FTX home">
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-forest-deep text-white shadow-sm">
+          <!-- Leaf SVG icon (no external image) -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </span>
+        <span class="text-xl font-extrabold tracking-tight text-forest-deep">FTX</span>
+      </a>
+
+      <!-- APK CTA -->
+      <!-- ⬇️⬇️ PASTE REAL APK URL BELOW (replace href="#") ⬇️⬇️ -->
+      <a href="#" download
+         class="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-lg bg-forest-deep text-white text-sm font-semibold
+                hover:bg-forest transition-colors active:scale-[0.98]">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span class="hidden xs:inline sm:inline">Download APK</span>
+        <span class="xs:hidden sm:hidden">APK</span>
+      </a>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
+    <section class="relative overflow-hidden">
+      <!-- Decorative soft blobs -->
+      <div class="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-forest-mid/10 blur-3xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute bottom-0 -left-24 w-72 h-72 rounded-full bg-harvest/10 blur-3xl" aria-hidden="true"></div>
+
+      <div class="relative max-w-6xl mx-auto px-5 pt-12 pb-16 md:px-8 md:pt-20 md:pb-24 grid gap-12 md:grid-cols-2 md:items-center">
+
+        <!-- Copy -->
+        <div class="float-in">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-mid/10 text-forest-deep text-xs font-semibold tracking-wide uppercase">
+            <span class="w-1.5 h-1.5 rounded-full bg-harvest"></span>
+            Built for African farmers
+          </span>
+
+          <h1 class="mt-4 text-4xl leading-[1.1] font-extrabold tracking-tight text-forest-deep sm:text-5xl md:text-[3.25rem]">
+            Smart market prices &amp; planting guidance — <span class="text-harvest">in your pocket.</span>
+          </h1>
+
+          <p class="mt-5 text-base sm:text-lg text-stone-700 leading-relaxed max-w-xl">
+            FTX gives farmers live buying and selling prices, a direct way to list crops for sale, and clear seasonal planting windows.
+            Plus practical agricultural news and advisories — all offline-friendly and mobile-first.
+          </p>
+
+          <!-- CTAs -->
+          <div class="mt-8 flex flex-col sm:flex-row gap-3">
+            <!-- ⬇️⬇️ PASTE REAL APK URL BELOW (replace href="#") ⬇️⬇️ -->
+            <a href="#" download
+               class="inline-flex items-center justify-center gap-2 min-h-[52px] px-6 rounded-xl bg-forest-deep text-white font-semibold text-base
+                      shadow-lg shadow-forest-deep/20 hover:bg-forest transition-colors active:scale-[0.99]">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download FTX for Android (APK)
+            </a>
+
+            <a href="#features"
+               class="inline-flex items-center justify-center gap-2 min-h-[52px] px-6 rounded-xl bg-white text-forest-deep font-semibold text-base
+                      border border-stone-300 hover:border-forest-mid hover:text-forest transition-colors active:scale-[0.99]">
+              See How It Works
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+              </svg>
+            </a>
+          </div>
+
+          <!-- Version / requirements badge -->
+          <p class="mt-4 inline-flex items-center gap-2 text-xs font-medium text-stone-600 bg-white border border-stone-200 rounded-full px-3 py-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-forest-mid" aria-hidden="true">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+            <!-- ⬇️ Update version / size below when you publish a build ⬇️ -->
+            <span>v1.0 • Android 8.0+ • ~18 MB</span>
+          </p>
+        </div>
+
+        <!-- Phone mockup -->
+        <div class="flex justify-center md:justify-end float-in" style="animation-delay: 0.15s">
+          <div class="relative">
+            <!-- Glow -->
+            <div class="absolute -inset-6 rounded-[3rem] bg-forest-mid/10 blur-2xl" aria-hidden="true"></div>
+
+            <!-- Phone frame -->
+            <div class="relative w-[280px] sm:w-[300px] rounded-[2.5rem] bg-stone-900 p-2.5 shadow-2xl shadow-forest-deep/30">
+              <div class="relative rounded-[2rem] bg-forest-deep overflow-hidden">
+                <!-- Notch -->
+                <div class="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-stone-900 z-10"></div>
+
+                <!-- Screen content -->
+                <div class="pt-9 pb-5 px-4 text-white" aria-hidden="true">
+                  <!-- App bar -->
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <p class="text-[10px] uppercase tracking-widest text-white/60">FTX Farmer</p>
+                      <p class="text-sm font-bold">Good morning, Amina</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold">A</div>
+                  </div>
+
+                  <!-- Section: Market -->
+                  <p class="text-[10px] uppercase tracking-widest text-white/60 mb-2">Today's market</p>
+                  <div class="space-y-2">
+                    <!-- Row 1 -->
+                    <div class="bg-white/10 rounded-xl p-3 flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-semibold">Maize</p>
+                        <p class="text-[10px] text-white/60">per 50kg bag</p>
+                      </div>
+                      <div class="text-right">
+                        <p class="text-sm font-bold">UGX 92,000</p>
+                        <p class="text-[10px] font-semibold text-green-300">▲ 2.4%</p>
+                      </div>
+                    </div>
+                    <!-- Row 2 -->
+                    <div class="bg-white/10 rounded-xl p-3 flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-semibold">Beans</p>
+                        <p class="text-[10px] text-white/60">per kg</p>
+                      </div>
+                      <div class="text-right">
+                        <p class="text-sm font-bold">UGX 4,200</p>
+                        <p class="text-[10px] font-semibold text-red-300">▼ 1.1%</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Planting advisory card -->
+                  <div class="mt-3 bg-harvest rounded-xl p-3">
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-forest-deep" aria-hidden="true">
+                        <path d="M12 2v20M2 12h20"/>
+                      </svg>
+                      <span class="text-[10px] font-extrabold uppercase tracking-widest text-forest-deep">Plant now</span>
+                    </div>
+                    <p class="text-xs font-semibold text-forest-deep leading-snug">
+                      Maize • Central region — window open until Mar 30.
+                    </p>
+                  </div>
+
+                  <!-- Sell CTA -->
+                  <div class="mt-3 bg-white text-forest-deep rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold">List your harvest</p>
+                      <p class="text-[10px] text-stone-600">Reach buyers directly</p>
+                    </div>
+                    <div class="w-7 h-7 rounded-full bg-forest-deep text-white flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FEATURES (4 CARDS)
+         ============================================================ -->
+    <section id="features" class="bg-white border-y border-stone-200">
+      <div class="max-w-6xl mx-auto px-5 py-16 md:px-8 md:py-24">
+        <div class="max-w-2xl">
+          <p class="text-xs font-bold uppercase tracking-widest text-harvest">Core features</p>
+          <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-forest-deep">
+            Everything a farmer needs, in one app
+          </h2>
+          <p class="mt-3 text-stone-700 text-base sm:text-lg">
+            No clutter, no jargon. Just the four tools that help you decide what to sell, when, and for how much.
+          </p>
+        </div>
+
+        <div class="mt-10 grid gap-5 sm:grid-cols-2">
+
+          <!-- Card 1 -->
+          <article class="group rounded-2xl border border-stone-200 bg-stone-bg p-6 hover:border-forest-mid hover:shadow-lg hover:shadow-forest-deep/5 transition-all">
+            <div class="w-12 h-12 rounded-xl bg-forest-mid/10 text-forest-deep flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6" aria-hidden="true">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+              </svg>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-forest-deep">Market Trends &amp; Prices</h3>
+            <p class="mt-2 text-sm text-stone-700 leading-relaxed">
+              Check daily buying and selling prices for crops and farm inputs with clear up/down trend indicators.
+            </p>
+          </article>
+
+          <!-- Card 2 -->
+          <article class="group rounded-2xl border border-stone-200 bg-stone-bg p-6 hover:border-forest-mid hover:shadow-lg hover:shadow-forest-deep/5 transition-all">
+            <div class="w-12 h-12 rounded-xl bg-harvest/10 text-harvest flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6" aria-hidden="true">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-forest-deep">Sell Your Crops</h3>
+            <p class="mt-2 text-sm text-stone-700 leading-relaxed">
+              Post harvest listings with quantity, unit, and asking price so buyers can find your produce.
+            </p>
+          </article>
+
+          <!-- Card 3 -->
+          <article class="group rounded-2xl border border-stone-200 bg-stone-bg p-6 hover:border-forest-mid hover:shadow-lg hover:shadow-forest-deep/5 transition-all">
+            <div class="w-12 h-12 rounded-xl bg-forest-mid/10 text-forest-deep flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-forest-deep">When to Plant &amp; Avoid</h3>
+            <p class="mt-2 text-sm text-stone-700 leading-relaxed">
+              Get clear seasonal guidance on the best planting windows — and periods when you should hold off.
+            </p>
+          </article>
+
+          <!-- Card 4 -->
+          <article class="group rounded-2xl border border-stone-200 bg-stone-bg p-6 hover:border-forest-mid hover:shadow-lg hover:shadow-forest-deep/5 transition-all">
+            <div class="w-12 h-12 rounded-xl bg-harvest/10 text-harvest flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6" aria-hidden="true">
+                <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+                <line x1="18" y1="14" x2="10" y2="14"/><line x1="18" y1="18" x2="10" y2="18"/><line x1="18" y1="10" x2="10" y2="10"/>
+              </svg>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-forest-deep">Agricultural News</h3>
+            <p class="mt-2 text-sm text-stone-700 leading-relaxed">
+              Stay updated with practical farming advisories, weather alerts, and sector news that matters.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         HOW FARMERS USE FTX (3 STEPS)
+         ============================================================ -->
+    <section class="bg-stone-bg">
+      <div class="max-w-6xl mx-auto px-5 py-16 md:px-8 md:py-24">
+        <div class="max-w-2xl">
+          <p class="text-xs font-bold uppercase tracking-widest text-harvest">Quick start</p>
+          <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-forest-deep">
+            How farmers use FTX
+          </h2>
+          <p class="mt-3 text-stone-700 text-base sm:text-lg">
+            From download to your first smart decision — in under three minutes.
+          </p>
+        </div>
+
+        <ol class="mt-10 grid gap-5 md:grid-cols-3">
+          <!-- Step 1 -->
+          <li class="relative rounded-2xl bg-white border border-stone-200 p-6">
+            <span class="absolute -top-3 left-6 inline-flex items-center justify-center w-8 h-8 rounded-full bg-forest-deep text-white text-sm font-extrabold shadow">1</span>
+            <div class="mt-3 text-forest-deep">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+            <h3 class="mt-3 text-base font-bold text-forest-deep">Download &amp; install</h3>
+            <p class="mt-1.5 text-sm text-stone-700 leading-relaxed">
+              Grab the FTX APK and install it on any Android phone running 8.0 or newer.
+            </p>
+          </li>
+
+          <!-- Step 2 -->
+          <li class="relative rounded-2xl bg-white border border-stone-200 p-6">
+            <span class="absolute -top-3 left-6 inline-flex items-center justify-center w-8 h-8 rounded-full bg-forest-deep text-white text-sm font-extrabold shadow">2</span>
+            <div class="mt-3 text-forest-deep">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <h3 class="mt-3 text-base font-bold text-forest-deep">Create a free account</h3>
+            <p class="mt-1.5 text-sm text-stone-700 leading-relaxed">
+              Sign up with your name and email — no fees, no subscriptions, no card required.
+            </p>
+          </li>
+
+          <!-- Step 3 -->
+          <li class="relative rounded-2xl bg-white border border-stone-200 p-6">
+            <span class="absolute -top-3 left-6 inline-flex items-center justify-center w-8 h-8 rounded-full bg-forest-deep text-white text-sm font-extrabold shadow">3</span>
+            <div class="mt-3 text-forest-deep">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <h3 class="mt-3 text-base font-bold text-forest-deep">Check &amp; act</h3>
+            <p class="mt-1.5 text-sm text-stone-700 leading-relaxed">
+              Check market prices, review planting windows, or post your crops for sale — right from your phone.
+            </p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         BOTTOM DOWNLOAD BANNER
+         ============================================================ -->
+    <section class="bg-forest-deep text-white">
+      <div class="max-w-6xl mx-auto px-5 py-16 md:px-8 md:py-20 text-center md:text-left md:flex md:items-center md:justify-between md:gap-12">
+        <div class="max-w-2xl mx-auto md:mx-0">
+          <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Ready to farm with better information?
+          </h2>
+          <p class="mt-3 text-white/80 text-base">
+            Download FTX on Android and start checking prices, planting windows, and buyer interest today.
+          </p>
+          <p class="mt-3 text-xs text-white/60 flex items-center justify-center md:justify-start gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            Enable "Install from Unknown Sources" if prompted during install.
+          </p>
+        </div>
+
+        <div class="mt-6 md:mt-0 shrink-0">
+          <!-- ⬇️⬇️ PASTE REAL APK URL BELOW (replace href="#") ⬇️⬇️ -->
+          <a href="#" download
+             class="inline-flex items-center justify-center gap-2 min-h-[56px] w-full md:w-auto px-8 rounded-xl bg-harvest text-forest-deep font-bold text-base
+                    shadow-lg shadow-black/20 hover:bg-harvest-soft transition-colors active:scale-[0.99]">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download FTX APK
+          </a>
+          <p class="mt-2 text-[11px] text-white/60 text-center md:text-right">Free • v1.0 • Android 8.0+</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="bg-stone-900 text-stone-400">
+    <div class="max-w-6xl mx-auto px-5 py-8 md:px-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-forest-deep text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </span>
+        <div>
+          <p class="text-sm font-bold text-white">FTX Farming</p>
+          <p class="text-xs">Smart prices &amp; planting guidance for farmers.</p>
+        </div>
+      </div>
+      <p class="text-xs">© <span id="year">2025</span> FTX. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Auto-update copyright year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Reveal guard (in case Tailwind CDN is slow)
+    document.documentElement.setAttribute('data-tailwind', 'done');
+  </script>
+</body>
 </html>
