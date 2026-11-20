@@ -1,6 +1,6 @@
 # FTX
 
-Minimal farming app scaffold: an Expo/NativeWind mobile app, Express/PostgreSQL API, and static landing page.
+Minimal farming app scaffold: a React Native/NativeWind mobile app, Express/PostgreSQL API, and static landing page.
 
 ## Run the API
 
@@ -27,17 +27,17 @@ Optional free live-data providers:
 ```bash
 cd mobile
 npm install
-# Optional: set EXPO_PUBLIC_API_URL in your Expo environment.
-npm start
+# Set the API URL for a local Android build.
+FTX_API_URL=http://<COMPUTER_LAN_IP>:4000/api npm run android
 ```
 
-For Expo Go on a physical phone:
+For native Android development on a physical phone:
 
-1. Connect the phone and computer to the **same Wi-Fi network**.
-2. In `mobile/.env`, set `EXPO_PUBLIC_API_URL` to `http://<COMPUTER_LAN_IP>:4000/api`.
+1. Install Android Studio, the Android SDK, and platform tools.
+2. Enable USB debugging and connect the phone, or start an Android emulator.
 3. Start the API with `cd server && npm run dev`.
-4. Start Expo with `cd mobile && npm start`.
-5. Scan the QR code with Expo Go or the phone camera.
+4. Connect the phone and computer to the same Wi-Fi network when using the computer's LAN API.
+5. Run `FTX_API_URL=http://<COMPUTER_LAN_IP>:4000/api npm run android` from `mobile/`.
 
 Find your computer LAN IP with `hostname -I` on Linux, `ipconfig` on Windows, or `ifconfig` on macOS. Do not use `localhost` on the phone; it refers to the phone itself.
 
@@ -61,10 +61,10 @@ Neon hosts PostgreSQL only; it cannot run the Express app process.
    - `PORT` = `4000` or the host-provided port
    - optional `NEWS_API_KEY` and `MARKET_API_KEY`
 4. Run `npm install`, `npm run seed`, then `npm start` on the server host.
-5. Set the mobile app's `EXPO_PUBLIC_API_URL` to `<HTTPS_SERVER_URL>/api`.
+5. Set the GitHub Actions `FTX_API_URL` secret to `<HTTPS_SERVER_URL>/api`.
 
 GitHub Actions APK automation:
 
-1. In the repository Settings, create `EXPO_TOKEN` and `EXPO_PUBLIC_API_URL` repository secrets.
-2. Link the mobile project to an Expo account and run `cd mobile && eas build:configure`.
-3. Run **Build and release FTX Android app** from the Actions tab, or publish a GitHub Release.
+1. In the repository Settings, create the `FTX_API_URL` repository secret.
+2. Run **Build and release FTX Android app** from the Actions tab, or publish a GitHub Release.
+3. GitHub Actions runs the native Gradle build, uploads `FTX.apk` to the release, and the Pages workflow publishes it at `app/FTX.apk`.

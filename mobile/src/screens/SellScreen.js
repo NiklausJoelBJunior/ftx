@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Image, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenHeader from '../components/ScreenHeader';
-import * as ImagePicker from 'expo-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import FormInput from '../components/FormInput';
 import AppButton from '../components/AppButton';
 import { api } from '../services/api';
@@ -24,10 +24,10 @@ export default function SellScreen() {
   useEffect(load, []);
 
   const chooseImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return Alert.alert('FTX', 'Photo permission is required');
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
-    if (!result.canceled) setImage(result.assets[0]);
+    const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
+    if (result.didCancel) return;
+    if (result.errorCode) return Alert.alert('FTX', result.errorMessage || 'Could not select an image');
+    if (result.assets?.[0]) setImage(result.assets[0]);
   };
 
   const submit = async () => {
@@ -36,7 +36,7 @@ export default function SellScreen() {
       Object.entries({ ...form, quantity: String(Number(form.quantity)), askingPrice: String(Number(form.askingPrice)) }).forEach(([key, value]) => {
         if (value !== undefined && value !== null) body.append(key, String(value));
       });
-      if (image) body.append('image', { uri: image.uri, name: 'listing.jpg', type: image.mimeType || 'image/jpeg' });
+      if (image) body.append('image', { uri: image.uri, name: 'listing.jpg', type: image.type || 'image/jpeg' });
       await api('/listings', { method: 'POST', body });
       setForm({});
       setImage(null);

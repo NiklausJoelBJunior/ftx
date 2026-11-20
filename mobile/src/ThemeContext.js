@@ -41,7 +41,7 @@ export function ThemeProvider({ children }) {
       colors,
       typography: makeTypography(colors),
     };
-  }, [mode, effectiveScheme]);
+  }, [mode, effectiveScheme, themeLoaded]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

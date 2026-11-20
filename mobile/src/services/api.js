@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// For Expo on a physical phone, replace localhost with this computer's LAN IP:
-// EXPO_PUBLIC_API_URL=https://your-api-tunnel.trycloudflare.com/api
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api';
+// Set FTX_API_URL when building a release, or replace this fallback for local development.
+export const API_URL = process.env.FTX_API_URL || 'http://localhost:4000/api';
 export async function api(path, options = {}) {
   const token = await AsyncStorage.getItem('ftx_token');
   const controller = new AbortController();

@@ -27,20 +27,18 @@ jobs:
       - name: Install dependencies
         working-directory: mobile
         run: npm ci
-      - name: Setup Expo and EAS
-        run: npm install --global eas-cli
-      - name: Build signed Android APK
-        working-directory: mobile
+      - name: Build Android APK with Gradle
+        working-directory: mobile/android
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+          FTX_API_URL: ${{ secrets.FTX_API_URL }}
         run: |
-          if [ -z "$EXPO_PUBLIC_API_URL" ]; then
-            echo "EXPO_PUBLIC_API_URL secret is required" >&2
+          if [ -z "$FTX_API_URL" ]; then
+            echo "FTX_API_URL secret is required" >&2
             exit 1
           fi
-          printf 'EXPO_PUBLIC_API_URL=%s\n' "$EXPO_PUBLIC_API_URL" > .env.production
-          eas build --platform android --profile preview --non-interactive --wait --output=../FTX.apk
+          chmod +x gradlew
+          FTX_API_URL="$FTX_API_URL" ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../../FTX.apk
       - name: Publish APK to GitHub
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

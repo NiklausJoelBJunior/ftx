@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Image, ScrollView, Text, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenHeader from '../components/ScreenHeader';
-import * as ImagePicker from 'expo-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import FormInput from '../components/FormInput';
 import AppButton from '../components/AppButton';
 import { api } from '../services/api';
@@ -15,12 +15,12 @@ export default function ProfileScreen({ user, onLogout }) {
   const [form, setForm] = useState(user || {});
 
   const chooseImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return Alert.alert('FTX', 'Photo permission is required');
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
-    if (!result.canceled) {
+    const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
+    if (result.didCancel) return;
+    if (result.errorCode) return Alert.alert('FTX', result.errorMessage || 'Could not select an image');
+    if (result.assets?.[0]) {
       const body = new FormData();
-      body.append('image', { uri: result.assets[0].uri, name: 'profile.jpg', type: result.assets[0].mimeType || 'image/jpeg' });
+      body.append('image', { uri: result.assets[0].uri, name: 'profile.jpg', type: result.assets[0].type || 'image/jpeg' });
       try {
         const updated = await api('/uploads/profile', { method: 'POST', body });
         setForm(updated);

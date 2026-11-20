@@ -47,7 +47,7 @@ export default function AppTabs({ user, onLogout, onLogin }) {
   );
 }
 
-// Simple placeholder icons — replace with @expo/vector-icons (Feather/Ionicons) in production
+// Simple placeholder icons keep the app dependency-light.
 function TabIcon({ label, color }) {
   const { Text } = require('react-native');
   return <Text style={{ color, fontWeight: '800', fontSize: 16 }}>{label}</Text>;
