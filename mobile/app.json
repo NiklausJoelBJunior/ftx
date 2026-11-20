@@ -4,8 +4,8 @@
     "slug": "ftx",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
-    "entryPoint": "./App.js",
+    "userInterfaceStyle": "dark",
+    "icon": "./assets/ftx-icon.png",
     "android": {
       "package": "com.example.ftx",
       "versionCode": 1

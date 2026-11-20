@@ -1,22 +1,87 @@
 import React, { useEffect, useState } from 'react';
-import './global.css';
-import { ActivityIndicator, Button, FlatList, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api, clearSession, saveSession } from './src/services/api';
+import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AppLoading from './src/components/AppLoading';
+import AuthScreen from './src/screens/AuthScreen';
+import AppTabs from './src/screens/AppTabs';
+import NewsDetailScreen from './src/screens/NewsDetailScreen';
+import { ThemeProvider, useTheme } from './src/ThemeContext';
+import { makeNavigationTheme } from './src/theme';
+import { api, clearSession } from './src/services/api';
 
-const Stack = createNativeStackNavigator(); const Tabs = createBottomTabNavigator();
-const styles = { page: { flex: 1, padding: 18, backgroundColor: '#f7faf7' }, title: { fontSize: 24, fontWeight: '700', color: '#14532d', marginBottom: 14 }, card: { backgroundColor: 'white', padding: 14, marginBottom: 10, borderRadius: 8 }, input: { backgroundColor: 'white', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 6, padding: 12, marginBottom: 10 }, muted: { color: '#64748b', marginTop: 4 } };
-function FormInput({ value, onChangeText, placeholder, secureTextEntry }) { return <TextInput style={styles.input} value={value} onChangeText={onChangeText} placeholder={placeholder} secureTextEntry={secureTextEntry} />; }
-function AuthScreen({ onReady }) { const [loginMode, setLoginMode] = useState(true); const [form, setForm] = useState({}); const submit = async () => { try { const data = await api(`/auth/${loginMode ? 'login' : 'register'}`, { method: 'POST', body: JSON.stringify(form) }); await saveSession(data); onReady(data.user); } catch (e) { alert(e.message); } }; return <SafeAreaView style={styles.page}><Text style={styles.title}>FTX Farmer</Text>{!loginMode && <FormInput placeholder="Name" onChangeText={name => setForm({ ...form, name })} />}<FormInput placeholder="Email" onChangeText={email => setForm({ ...form, email })} /><FormInput placeholder="Password" secureTextEntry onChangeText={password => setForm({ ...form, password })} /><Button title={loginMode ? 'Log in' : 'Create account'} onPress={submit} /><TouchableOpacity onPress={() => setLoginMode(!loginMode)}><Text style={{ marginTop: 16, color: '#166534' }}>{loginMode ? 'Need an account? Register' : 'Already registered? Log in'}</Text></TouchableOpacity></SafeAreaView>; }
-function ListScreen({ title, endpoint, renderItem }) { const [items, setItems] = useState([]); useEffect(() => { api(endpoint).then(setItems).catch(e => alert(e.message)); }, [endpoint]); return <SafeAreaView style={styles.page}><Text style={styles.title}>{title}</Text><FlatList data={items} keyExtractor={item => String(item.id)} renderItem={renderItem} ListEmptyComponent={<Text>No items yet.</Text>} /></SafeAreaView>; }
-function Market() { return <ListScreen title="Market Prices" endpoint="/market-prices" renderItem={({ item }) => <View style={styles.card}><Text>{item.crop_name} · {item.category}</Text><Text>Buy: ${item.buying_price} / {item.unit} · Sell: ${item.selling_price}</Text><Text style={{ color: item.trend === 'down' ? '#b91c1c' : '#166534' }}>Trend: {item.trend}</Text></View>} />; }
-function Planting() { return <ListScreen title="Planting Advisory" endpoint="/planting-advisories" renderItem={({ item }) => <View style={styles.card}><Text>{item.crop_name} — {item.recommendation}</Text><Text>{item.region} · {item.planting_window}</Text><Text style={styles.muted}>{item.notes}</Text></View>} />; }
-function News({ navigation }) { return <ListScreen title="Agricultural News" endpoint="/news" renderItem={({ item }) => <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('NewsDetail', { id: item.id })}><Text>{item.title}</Text><Text style={styles.muted}>{item.summary}</Text></TouchableOpacity>} />; }
-function NewsDetail({ route }) { const [item, setItem] = useState(null); useEffect(() => { api(`/news/${route.params.id}`).then(setItem).catch(e => alert(e.message)); }, [route.params.id]); return <ScrollView style={styles.page}>{item ? <><Text style={styles.title}>{item.title}</Text><Text style={styles.muted}>{item.category}</Text><Text style={{ marginTop: 18, lineHeight: 24 }}>{item.content}</Text></> : <ActivityIndicator />}</ScrollView>; }
-function Sell() { const [form, setForm] = useState({}); const [items, setItems] = useState([]); const [active, setActive] = useState([]); const load = () => Promise.all([api('/listings/mine'), api('/listings')]).then(([mine, marketplace]) => { setItems(mine); setActive(marketplace); }).catch(e => alert(e.message)); useEffect(load, []); const submit = async () => { try { await api('/listings', { method: 'POST', body: JSON.stringify({ ...form, quantity: Number(form.quantity), askingPrice: Number(form.askingPrice) }) }); setForm({}); load(); } catch (e) { alert(e.message); } }; return <ScrollView style={styles.page}><Text style={styles.title}>Sell Crops</Text>{['cropName', 'category', 'quantity', 'unit', 'askingPrice', 'location'].map(key => <FormInput key={key} value={form[key] || ''} placeholder={key} onChangeText={value => setForm({ ...form, [key]: value })} />)}<Button title="Create listing" onPress={submit} /><Text style={[styles.title, { fontSize: 18, marginTop: 20 }]}>My listings</Text>{items.map(item => <View style={styles.card} key={`mine-${item.id}`}><Text>{item.crop_name} · {item.quantity} {item.unit}</Text><Text>{item.location} · ${item.asking_price} · {item.status}</Text></View>)}<Text style={[styles.title, { fontSize: 18, marginTop: 20 }]}>Active marketplace</Text>{active.map(item => <View style={styles.card} key={`active-${item.id}`}><Text>{item.crop_name} · {item.quantity} {item.unit}</Text><Text>{item.location} · ${item.asking_price}</Text></View>)}</ScrollView>; }
-function Profile({ user, onLogout }) { const [form, setForm] = useState(user || {}); const save = async () => { const updated = await api('/auth/profile', { method: 'PUT', body: JSON.stringify({ ...form, farmArea: form.farm_area }) }); setForm(updated); alert('Profile updated'); }; return <ScrollView style={styles.page}><Text style={styles.title}>Profile</Text>{['name', 'phone', 'location', 'farm_area'].map(key => <FormInput key={key} value={form[key] || ''} placeholder={key} onChangeText={value => setForm({ ...form, [key]: value })} />)}<Button title="Save profile" onPress={save} /><View style={{ marginTop: 18 }}><Button title="Log out" color="#b91c1c" onPress={onLogout} /></View></ScrollView>; }
-function AppTabs({ user, onLogout }) { return <Tabs.Navigator><Tabs.Screen name="Market" component={Market} /><Tabs.Screen name="Sell" component={Sell} /><Tabs.Screen name="Planting" component={Planting} /><Tabs.Screen name="News" component={News} /><Tabs.Screen name="Profile">{() => <Profile user={user} onLogout={onLogout} />}</Tabs.Screen></Tabs.Navigator>; }
-export default function App() { const [user, setUser] = useState(); useEffect(() => { AsyncStorage.getItem('ftx_user').then(value => value && setUser(JSON.parse(value))); }, []); return <NavigationContainer>{user ? <Stack.Navigator><Stack.Screen name="Home" options={{ headerShown: false }}>{() => <AppTabs user={user} onLogout={async () => { await clearSession(); setUser(); }} />}</Stack.Screen><Stack.Screen name="NewsDetail" component={NewsDetail} options={{ title: 'News' }} /></Stack.Navigator> : <AuthScreen onReady={setUser} />}</NavigationContainer>; }
+const Stack = createNativeStackNavigator();
+
+function AppShell() {
+  const { scheme } = useTheme();
+  const navTheme = makeNavigationTheme(scheme);
+  const [user, setUser] = useState(undefined);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem('ftx_user')
+      .then(async value => {
+        if (!value) return setUser(null);
+        try {
+          const profile = await api('/auth/profile');
+          setUser(profile);
+          await AsyncStorage.setItem('ftx_user', JSON.stringify(profile));
+        } catch {
+          await clearSession();
+          setUser(null);
+        }
+      })
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const logout = async () => {
+    await clearSession();
+    setUser(null);
+  };
+
+  if (loading) {
+    return (
+      <>
+        <StatusBar barStyle={scheme === 'light' ? 'dark-content' : 'light-content'} backgroundColor={navTheme.colors.background} />
+        <AppLoading />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <StatusBar barStyle={scheme === 'light' ? 'dark-content' : 'light-content'} backgroundColor={navTheme.colors.background} />
+      <NavigationContainer theme={navTheme}>
+        <Stack.Navigator>
+          <Stack.Screen name="Home" options={{ headerShown: false }}>
+            {() => <AppTabs user={user} onLogout={logout} onLogin={setUser} />}
+          </Stack.Screen>
+          <Stack.Screen
+            name="NewsDetail"
+            component={NewsDetailScreen}
+            options={{
+              title: 'News',
+              headerStyle: { backgroundColor: navTheme.colors.card },
+              headerTintColor: navTheme.colors.text,
+              headerShadowVisible: false,
+              headerBackTitleVisible: false,
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppShell />
+      </ThemeProvider>
+    </SafeAreaProvider>
+  );
+}

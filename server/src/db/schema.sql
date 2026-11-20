@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   location VARCHAR(160),
   farm_area VARCHAR(80),
+  profile_image_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS crop_listings (
   unit VARCHAR(30) NOT NULL,
   asking_price NUMERIC(12, 2) NOT NULL,
   location VARCHAR(160) NOT NULL,
+  image_url TEXT,
   status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'sold', 'inactive')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -52,3 +54,6 @@ CREATE TABLE IF NOT EXISTS news_articles (
   category VARCHAR(80) NOT NULL DEFAULT 'Agriculture',
   published_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image_url TEXT;
+ALTER TABLE crop_listings ADD COLUMN IF NOT EXISTS image_url TEXT;

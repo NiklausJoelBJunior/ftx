@@ -16,7 +16,10 @@ export async function register(req, res, next) {
       [name, email.toLowerCase(), phone || null, hash, location || null, farmArea || null],
     );
     res.status(201).json({ token: tokenFor(rows[0]), user: publicUser(rows[0]) });
-  } catch (error) { next(error); }
+  } catch (error) {
+    if (error.code === '23505') return res.status(409).json({ error: 'An account with this email already exists' });
+    next(error);
+  }
 }
 
 export async function login(req, res, next) {
@@ -30,19 +33,19 @@ export async function login(req, res, next) {
 
 export async function profile(req, res, next) {
   try {
-    const { rows } = await pool.query('SELECT id, name, email, phone, location, farm_area, created_at FROM users WHERE id = $1', [req.user.id]);
+    const { rows } = await pool.query('SELECT id, name, email, phone, location, farm_area, profile_image_url, created_at FROM users WHERE id = $1', [req.user.id]);
     res.json(rows[0]);
   } catch (error) { next(error); }
 }
 
 export async function updateProfile(req, res, next) {
   try {
-    const { name, phone, location, farmArea } = req.body;
+    const { name, phone, location, farmArea, profileImageUrl } = req.body;
     const { rows } = await pool.query(
       `UPDATE users SET name = COALESCE($1, name), phone = COALESCE($2, phone), location = COALESCE($3, location),
-       farm_area = COALESCE($4, farm_area) WHERE id = $5
-       RETURNING id, name, email, phone, location, farm_area, created_at`,
-      [name, phone, location, farmArea, req.user.id],
+       farm_area = COALESCE($4, farm_area), profile_image_url = COALESCE($5, profile_image_url) WHERE id = $6
+       RETURNING id, name, email, phone, location, farm_area, profile_image_url, created_at`,
+      [name, phone, location, farmArea, profileImageUrl, req.user.id],
     );
     res.json(rows[0]);
   } catch (error) { next(error); }
