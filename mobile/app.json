@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "FTX",
+    "slug": "ftx",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "entryPoint": "./App.js",
+    "android": {
+      "package": "com.example.ftx",
+      "versionCode": 1
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}
