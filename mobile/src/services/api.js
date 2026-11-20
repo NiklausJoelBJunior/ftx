@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Set FTX_API_URL when building a release, or replace this fallback for local development.
-export const API_URL = process.env.FTX_API_URL || 'http://localhost:4000/api';
+// Set FTX_API_URL when building a release.
+export const API_URL = process.env.FTX_API_URL || 'https://ftx-e713.onrender.com/api';
 export async function api(path, options = {}) {
   const token = await AsyncStorage.getItem('ftx_token');
   const controller = new AbortController();
