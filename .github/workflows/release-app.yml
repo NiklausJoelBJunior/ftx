@@ -29,6 +29,8 @@ jobs:
           distribution: microsoft
           java-version: 17
       - uses: android-actions/setup-android@v3
+        with:
+          packages: ''
       - name: Install Android SDK packages
         run: |
           yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null
