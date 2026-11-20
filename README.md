@@ -60,7 +60,7 @@ Neon hosts PostgreSQL only; it cannot run the Express app process.
    - `JWT_SECRET` = a long random value
    - `PORT` = `4000` or the host-provided port
    - optional `NEWS_API_KEY` and `MARKET_API_KEY`
-4. Run `npm install`, `npm run seed`, then `npm start` on the server host.
+4. Run `npm install` and `npm start` on the server host. The server creates missing database tables on startup; run `npm run seed` once to populate the demo account and sample data.
 5. Set the GitHub Actions `FTX_API_URL` secret to `<HTTPS_SERVER_URL>/api`.
 
 GitHub Actions APK automation:

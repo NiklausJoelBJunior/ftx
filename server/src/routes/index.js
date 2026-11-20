@@ -23,6 +23,8 @@ const upload = multer({
   fileFilter: (req, file, done) => done(null, ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)),
 });
 
+router.get('/', (req, res) => res.json({ name: 'FTX API', health: '/api/health' }));
+
 async function commonsImage(query) {
   try {
     const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=700&format=json&origin=*`;
