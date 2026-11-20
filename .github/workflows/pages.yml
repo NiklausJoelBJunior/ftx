@@ -35,9 +35,7 @@ jobs:
             "updated": "build awaiting APK"
           }
           JSON
-          cat > site/app/README.txt <<'TEXT'
-FTX.apk is not available yet. Publish a GitHub Release with an APK asset or run the Android build workflow.
-TEXT
+          printf '%s\n' 'FTX.apk is not available yet. Publish a GitHub Release with an APK asset or run the Android build workflow.' > site/app/README.txt
           if gh release view --repo "${{ github.repository }}" >/dev/null 2>&1; then
             mkdir -p /tmp/ftx-release
             if gh release download --repo "${{ github.repository }}" --pattern "*.apk" --dir /tmp/ftx-release --clobber; then
