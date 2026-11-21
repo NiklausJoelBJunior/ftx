@@ -1,0 +1,71 @@
+name: Deploy FTX website
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Pages site
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          rm -rf site
+          mkdir -p site/app
+          cp -R landing/. site/
+          cat > site/app/version.json <<'JSON'
+          {
+            "version": "development",
+            "updated": "build awaiting APK"
+          }
+          JSON
+          printf '%s\n' 'FTX.apk is not available yet. Publish a GitHub Release with an APK asset or run the Android build workflow.' > site/app/README.txt
+          if gh release view --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            mkdir -p /tmp/ftx-release
+            if gh release download --repo "${{ github.repository }}" --pattern "*.apk" --dir /tmp/ftx-release --clobber; then
+              apk="$(find /tmp/ftx-release -maxdepth 1 -type f -iname '*.apk' | head -n 1)"
+              if [ -n "$apk" ]; then
+                cp "$apk" site/app/FTX.apk
+                rm -f site/app/README.txt
+              fi
+            fi
+            release_json="$(gh release view --repo "${{ github.repository }}" --json tagName,publishedAt)"
+            TAG="$(printf '%s' "$release_json" | jq -r '.tagName')"
+            UPDATED="$(printf '%s' "$release_json" | jq -r '.publishedAt')"
+            cat > site/app/version.json <<JSON
+          {
+            "version": "$TAG",
+            "updated": "$UPDATED"
+          }
+          JSON
+          fi
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

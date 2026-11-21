@@ -1,0 +1,64 @@
+name: Build and release FTX Android app
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version tag
+        required: true
+        default: v1.0.1
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+      - name: Install Android SDK packages
+        run: |
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" "ndk;27.1.12297006"
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+      - name: Build Android APK with Gradle
+        working-directory: mobile/android
+        env:
+          FTX_API_URL: ${{ secrets.FTX_API_URL }}
+        run: |
+          if [ -z "$FTX_API_URL" ]; then
+            echo "FTX_API_URL secret is required" >&2
+            exit 1
+          fi
+          chmod +x gradlew
+          FTX_API_URL="$FTX_API_URL" ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../../FTX.apk
+      - name: Publish APK to GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.version }}"
+          if [ -z "$TAG" ]; then TAG="${{ github.event.release.tag_name }}"; fi
+          if [ -z "$TAG" ]; then TAG="v1.0.${GITHUB_RUN_NUMBER}"; fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" FTX.apk --clobber
+          else
+            gh release create "$TAG" FTX.apk --title "FTX $TAG" --notes "Automated Android APK build"
+          fi

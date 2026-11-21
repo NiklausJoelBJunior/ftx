@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="220" fill="#090d0a"/>
+  <circle cx="512" cy="512" r="390" fill="#14532d"/>
+  <circle cx="512" cy="512" r="330" fill="#22c55e"/>
+  <path d="M512 830c-150-85-252-222-252-400 0-96 52-170 126-211 53 49 88 112 126 180 38-68 73-131 126-180 74 41 126 115 126 211 0 178-102 315-252 400z" fill="#090d0a"/>
+  <path d="M512 744V306" stroke="#f4f7f5" stroke-width="34" stroke-linecap="round"/>
+  <text x="512" y="594" text-anchor="middle" font-family="Arial,sans-serif" font-size="210" font-weight="800" fill="#f4f7f5">FTX</text>
+</svg>
