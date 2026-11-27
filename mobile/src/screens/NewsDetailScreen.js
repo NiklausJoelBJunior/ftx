@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { api } from '../services/api';
 import { useTheme } from '../ThemeContext';
 import { makeStyles } from '../styles';
@@ -41,7 +42,7 @@ export default function NewsDetailScreen({ route }) {
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={{ padding: 18, paddingBottom: 40 }}>
-      {item.image_url ? <Image source={{ uri: item.image_url }} style={styles.cardImage} /> : null}
+      <ImageWithFallback uri={item.image_url} style={styles.cardImage} />
       <Text style={styles.title}>{item.title}</Text>
       <Text style={[styles.badgeText, { color: colors.muted, marginBottom: 16 }]}>
         {[item.source, item.category, publishedAt].filter(Boolean).join(' · ')}

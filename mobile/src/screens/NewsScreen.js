@@ -1,7 +1,8 @@
 import React from 'react';
-import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenHeader from '../components/ScreenHeader';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { useApiList } from '../services/useApiList';
 import { useTheme } from '../ThemeContext';
 import { makeStyles } from '../styles';
@@ -26,7 +27,7 @@ export default function NewsScreen({ navigation }) {
         contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 32 }}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('NewsDetail', { id: item.id })} activeOpacity={0.75}>
-            {item.image_url ? <Image source={{ uri: item.image_url }} style={styles.cardImage} /> : null}
+            <ImageWithFallback uri={item.image_url} style={styles.cardImage} />
             <Text style={styles.rowText}>{item.title}</Text>
             <Text style={styles.muted} numberOfLines={2}>{item.summary}</Text>
             <Text style={styles.muted}>{item.source || item.category} · {formatPublishedDate(item.published_at)}</Text>

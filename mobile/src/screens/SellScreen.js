@@ -7,10 +7,12 @@ import FormInput from '../components/FormInput';
 import AppButton from '../components/AppButton';
 import { api } from '../services/api';
 import { useTheme } from '../ThemeContext';
+import { useCurrency } from '../CurrencyContext';
 import { makeStyles } from '../styles';
 
 export default function SellScreen() {
   const { scheme, colors } = useTheme();
+  const { currency, formatAmount, convertToUsd } = useCurrency();
   const styles = makeStyles(scheme);
   const [form, setForm] = useState({});
   const [mine, setMine] = useState([]);
@@ -33,7 +35,11 @@ export default function SellScreen() {
   const submit = async () => {
     try {
       const body = new FormData();
-      Object.entries({ ...form, quantity: String(Number(form.quantity)), askingPrice: String(Number(form.askingPrice)) }).forEach(([key, value]) => {
+      Object.entries({
+        ...form,
+        quantity: String(Number(form.quantity)),
+        askingPrice: String(convertToUsd(form.askingPrice)),
+      }).forEach(([key, value]) => {
         if (value !== undefined && value !== null) body.append(key, String(value));
       });
       if (image) body.append('image', { uri: image.uri, name: 'listing.jpg', type: image.type || 'image/jpeg' });
@@ -50,7 +56,7 @@ export default function SellScreen() {
     <View style={styles.card} key={`${prefix}-${item.id}`}>
       {item.image_url ? <Image source={{ uri: item.image_url }} style={styles.cardImage} /> : null}
       <Text style={styles.rowText}>{item.crop_name} · {item.quantity} {item.unit}</Text>
-      <Text style={styles.muted}>{item.location} · ${item.asking_price}{item.status ? ` · ${item.status}` : ''}</Text>
+      <Text style={styles.muted}>{item.location} · {formatAmount(item.asking_price)}{item.status ? ` · ${item.status}` : ''}</Text>
     </View>
   );
 
@@ -70,7 +76,8 @@ export default function SellScreen() {
           <FormInput label="Unit" value={form.unit || ''} placeholder="kg" onChangeText={(v) => setForm({ ...form, unit: v })} />
         </View>
       </View>
-      <FormInput label="Asking price ($)" value={form.askingPrice || ''} placeholder="0.00" keyboardType="numeric" onChangeText={(v) => setForm({ ...form, askingPrice: v })} />
+      <FormInput label={`Asking price (${currency})`} value={form.askingPrice || ''} placeholder="0.00" keyboardType="numeric" onChangeText={(v) => setForm({ ...form, askingPrice: v })} />
+      <Text style={styles.muted}>Prices are stored in USD and converted using the current exchange rate.</Text>
       <FormInput label="Location" value={form.location || ''} placeholder="City, region" onChangeText={(v) => setForm({ ...form, location: v })} />
 
       {image ? <Image source={{ uri: image.uri }} style={styles.cardImage} /> : null}

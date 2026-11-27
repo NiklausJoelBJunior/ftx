@@ -2,15 +2,18 @@ import React, { useState } from 'react';
 import { Alert, Image, ScrollView, Text, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenHeader from '../components/ScreenHeader';
+import CurrencyPicker from '../components/CurrencyPicker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import FormInput from '../components/FormInput';
 import AppButton from '../components/AppButton';
 import { api } from '../services/api';
 import { useTheme } from '../ThemeContext';
+import { useCurrency } from '../CurrencyContext';
 import { makeStyles } from '../styles';
 
 export default function ProfileScreen({ user, onLogout }) {
   const { scheme, colors, mode, setThemeMode } = useTheme();
+  const { ratesStatus, ratesError, ratesUpdatedAt } = useCurrency();
   const styles = makeStyles(scheme);
   const [form, setForm] = useState(user || {});
 
@@ -95,6 +98,14 @@ export default function ProfileScreen({ user, onLogout }) {
           );
         })}
       </View>
+
+      <Text style={styles.sectionTitle}>Currency</Text>
+      <CurrencyPicker />
+      {ratesStatus === 'loading' ? <Text style={styles.muted}>Loading exchange rates…</Text> : null}
+      {ratesError ? <Text style={[styles.muted, { color: colors.danger }]}>{ratesError}</Text> : null}
+      {ratesUpdatedAt && ratesStatus !== 'loading' ? (
+        <Text style={styles.muted}>Rates updated: {new Date(ratesUpdatedAt).toLocaleDateString()}</Text>
+      ) : null}
 
       <View style={{ marginTop: 24 }}>
         <AppButton title="Log out" variant="danger" onPress={onLogout} />

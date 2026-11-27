@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenHeader from '../components/ScreenHeader';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { useApiList } from '../services/useApiList';
 import { useTheme } from '../ThemeContext';
 import { makeStyles } from '../styles';
@@ -30,7 +31,7 @@ export default function PlantingScreen() {
               accessibilityLabel={`${item.crop_name} planting advisory details`}
               onPress={() => setExpandedId(expanded ? null : item.id)}
             >
-              {item.image_url ? <Image source={{ uri: item.image_url }} style={styles.cardImage} /> : null}
+              <ImageWithFallback uri={item.image_url} style={styles.cardImage} />
               <View style={[styles.badge, avoid ? styles.badgeDanger : styles.badgeGreen, { marginBottom: 8 }]}>
                 <Text style={[styles.badgeText, { color: avoid ? colors.danger : colors.green }]}>
                   {item.recommendation}

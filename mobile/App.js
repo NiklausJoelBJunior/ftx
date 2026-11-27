@@ -9,6 +9,7 @@ import AuthScreen from './src/screens/AuthScreen';
 import AppTabs from './src/screens/AppTabs';
 import NewsDetailScreen from './src/screens/NewsDetailScreen';
 import { ThemeProvider, useTheme } from './src/ThemeContext';
+import { CurrencyProvider } from './src/CurrencyContext';
 import { makeNavigationTheme } from './src/theme';
 import { api, clearSession } from './src/services/api';
 
@@ -80,7 +81,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AppShell />
+        <CurrencyProvider>
+          <AppShell />
+        </CurrencyProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

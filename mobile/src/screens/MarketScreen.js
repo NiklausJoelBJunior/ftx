@@ -3,14 +3,17 @@ import { Alert, FlatList, Image, Text, TouchableOpacity, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenHeader from '../components/ScreenHeader';
+import CurrencyPicker from '../components/CurrencyPicker';
 import { useApiList } from '../services/useApiList';
 import { api } from '../services/api';
 import AppButton from '../components/AppButton';
 import { useTheme } from '../ThemeContext';
+import { useCurrency } from '../CurrencyContext';
 import { makeStyles } from '../styles';
 
 export default function MarketScreen({ user }) {
   const { scheme, colors } = useTheme();
+  const { formatAmount } = useCurrency();
   const styles = makeStyles(scheme);
   const { items } = useApiList('/market-prices');
   const [listings, setListings] = useState([]);
@@ -44,7 +47,7 @@ export default function MarketScreen({ user }) {
 
   return (
     <SafeAreaView style={styles.page}>
-      <ScreenHeader title="Market Prices" />
+      <ScreenHeader title="Market Prices" right={<CurrencyPicker compact />} />
       <FlatList
         data={items}
         keyExtractor={(item) => String(item.id)}
@@ -58,7 +61,7 @@ export default function MarketScreen({ user }) {
                 <Text style={styles.rowText}>{listing.crop_name} · {listing.quantity} {listing.unit}</Text>
                 <Text style={styles.muted}>{listing.category} · {listing.location}</Text>
                 <Text style={styles.rowText}>
-                  ${listing.asking_price} / {listing.unit}
+                  {formatAmount(listing.asking_price)} / {listing.unit}
                 </Text>
                 {String(listing.user_id) === String(user?.id) ? (
                   <Text style={styles.muted}>Your listing</Text>
@@ -100,11 +103,11 @@ export default function MarketScreen({ user }) {
               <View style={[styles.row, { marginTop: 10, gap: 16 }]}>
                 <View>
                   <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '700', letterSpacing: 0.5 }}>BUY</Text>
-                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>${item.buying_price}</Text>
+                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>{formatAmount(item.buying_price)}</Text>
                 </View>
                 <View>
                   <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '700', letterSpacing: 0.5 }}>SELL</Text>
-                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>${item.selling_price}</Text>
+                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>{formatAmount(item.selling_price)}</Text>
                 </View>
                 <View>
                   <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '700', letterSpacing: 0.5 }}>UNIT</Text>
@@ -115,8 +118,8 @@ export default function MarketScreen({ user }) {
                 <View>
                   <Text style={styles.sectionTitle}>Price movement</Text>
                   <Text style={styles.rowText}>{trend} trend recorded</Text>
-                  <Text style={styles.muted}>Buying price: ${item.buying_price} per {item.unit}</Text>
-                  <Text style={styles.muted}>Selling price: ${item.selling_price} per {item.unit}</Text>
+                  <Text style={styles.muted}>Buying price: {formatAmount(item.buying_price)} per {item.unit}</Text>
+                  <Text style={styles.muted}>Selling price: {formatAmount(item.selling_price)} per {item.unit}</Text>
                   <Text style={styles.muted}>Market: {item.location || 'Location not provided'}</Text>
                   <Text style={styles.muted}>Source: {item.source || 'Market feed'}</Text>
                   <Text style={styles.muted}>Last updated: {updatedAt}</Text>

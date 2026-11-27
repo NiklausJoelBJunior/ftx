@@ -10,6 +10,8 @@ const router = Router();
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDirectory = path.join(directory, '..', 'uploads');
 fs.mkdirSync(uploadsDirectory, { recursive: true });
+let exchangeRateCache = null;
+let exchangeRateCacheExpiresAt = 0;
 
 function clientImageUrl(req, imageUrl) {
   if (!imageUrl) return imageUrl;
@@ -38,6 +40,31 @@ const upload = multer({
 });
 
 router.get('/', (req, res) => res.json({ name: 'FTX API', health: '/api/health' }));
+
+router.get('/exchange-rates', async (req, res) => {
+  if (exchangeRateCache && exchangeRateCacheExpiresAt > Date.now()) {
+    return res.json(exchangeRateCache);
+  }
+  try {
+    const response = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new Error(`Exchange-rate provider returned ${response.status}`);
+    const data = await response.json();
+    if (data.result !== 'success' || data.base_code !== 'USD' || !data.rates || data.rates.USD !== 1) {
+      throw new Error('Exchange-rate provider returned invalid data');
+    }
+    exchangeRateCache = {
+      base: 'USD',
+      rates: data.rates,
+      updatedAt: data.time_last_update_utc || null,
+      stale: false,
+    };
+    exchangeRateCacheExpiresAt = Date.now() + 6 * 60 * 60 * 1000;
+    return res.json(exchangeRateCache);
+  } catch (error) {
+    if (exchangeRateCache) return res.json({ ...exchangeRateCache, stale: true });
+    return res.status(503).json({ error: `Exchange rates are currently unavailable: ${error.message}` });
+  }
+});
 
 async function commonsImage(query) {
   try {
