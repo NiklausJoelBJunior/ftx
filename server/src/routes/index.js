@@ -11,6 +11,20 @@ const directory = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDirectory = path.join(directory, '..', 'uploads');
 fs.mkdirSync(uploadsDirectory, { recursive: true });
 
+function clientImageUrl(req, imageUrl) {
+  if (!imageUrl) return imageUrl;
+  try {
+    const url = new URL(imageUrl);
+    const localHost = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.)/.test(url.hostname);
+    if (url.protocol === 'http:' && ((req.secure && url.host === req.get('host')) || !localHost)) {
+      url.protocol = 'https:';
+    }
+    return url.toString();
+  } catch {
+    return imageUrl;
+  }
+}
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: uploadsDirectory,
@@ -28,7 +42,7 @@ router.get('/', (req, res) => res.json({ name: 'FTX API', health: '/api/health' 
 async function commonsImage(query) {
   try {
     const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=700&format=json&origin=*`;
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: { 'User-Agent': 'FTXMobile/1.0 agricultural marketplace' } });
     if (!response.ok) return null;
     const data = await response.json();
     const page = data.query?.pages ? Object.values(data.query.pages)[0] : null;
@@ -69,8 +83,9 @@ router.get('/market-prices', async (req, res, next) => {
             unit: 'unit',
             trend: item.change > 0 ? 'up' : item.change < 0 ? 'down' : 'steady',
             location: 'International',
+            source: 'API Ninjas',
             updated_at: new Date(),
-            image_url: await commonsImage(item.name || name),
+            image_url: clientImageUrl(req, await commonsImage(item.name || name)),
           })));
           return res.json(marketItems);
         }
@@ -82,7 +97,11 @@ router.get('/market-prices', async (req, res, next) => {
     if (req.query.category) { values.push(req.query.category); filters.push(`category = $${values.length}`); }
     const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
     const { rows } = await pool.query(`SELECT * FROM market_prices ${where} ORDER BY updated_at DESC`, values);
-    const marketItems = await Promise.all(rows.map(async item => ({ ...item, image_url: await commonsImage(item.crop_name) })));
+    const marketItems = await Promise.all(rows.map(async item => ({
+      ...item,
+      source: 'Seeded reference data',
+      image_url: clientImageUrl(req, await commonsImage(item.crop_name)),
+    })));
     res.json(marketItems);
   } catch (error) { next(error); }
 });
@@ -102,12 +121,15 @@ router.get('/planting-advisories', async (req, res, next) => {
           current_temperature: current.temperature_2m,
           recommendation: rainy ? 'Plant Now' : item.recommendation,
           notes: `${item.notes} Live weather: ${current.temperature_2m ?? 'unknown'}°C${rainy ? ', precipitation detected.' : '.'}`,
-          image_url: await commonsImage(item.crop_name),
+          image_url: clientImageUrl(req, await commonsImage(item.crop_name)),
         })));
         return res.json(advisories);
       }
     }
-    const advisories = await Promise.all(rows.map(async item => ({ ...item, image_url: await commonsImage(item.crop_name) })));
+    const advisories = await Promise.all(rows.map(async item => ({
+      ...item,
+      image_url: clientImageUrl(req, await commonsImage(item.crop_name)),
+    })));
     res.json(advisories);
   } catch (error) { next(error); }
 });
@@ -122,12 +144,13 @@ router.get('/news', async (req, res, next) => {
           return res.json(gdelt.articles.map((item, index) => ({
             id: `external-${index}`,
             title: item.title,
-            summary: item.title,
-            content: item.title,
+            summary: item.snippet || item.title,
+            content: item.snippet || item.title,
             category: 'Agriculture',
+            source: item.domain || null,
             published_at: item.seendate,
             external_url: item.url,
-            image_url: item.socialimage || null,
+            image_url: clientImageUrl(req, item.socialimage),
           })));
         }
       }
@@ -141,18 +164,22 @@ router.get('/news', async (req, res, next) => {
             id: `external-${index}`,
             title: item.title,
             summary: item.description || item.title,
-            content: item.description ? `${item.description}\n\nRead the full report at: ${item.url}` : item.url,
+            content: item.description || item.title,
             category: 'Agriculture',
+            source: item.source?.name || null,
             published_at: item.publishedAt,
             external_url: item.url,
-            image_url: item.image || await commonsImage(item.title),
+            image_url: clientImageUrl(req, item.image || await commonsImage(item.title)),
           })));
           return res.json(articles);
         }
       }
     }
     const { rows } = await pool.query('SELECT * FROM news_articles ORDER BY published_at DESC');
-    const articles = await Promise.all(rows.map(async item => ({ ...item, image_url: await commonsImage(`${item.title} agriculture`) })));
+    const articles = await Promise.all(rows.map(async item => ({
+      ...item,
+      image_url: clientImageUrl(req, await commonsImage(`${item.title} agriculture`)),
+    })));
     res.json(articles);
   } catch (error) { next(error); }
 });
@@ -168,12 +195,13 @@ router.get('/news/:id', async (req, res, next) => {
           if (item) return res.json({
             id: req.params.id,
             title: item.title,
-            summary: item.title,
-            content: item.title,
+            summary: item.snippet || item.title,
+            content: item.snippet || item.title,
             category: 'Agriculture',
+            source: item.domain || null,
             published_at: item.seendate,
             external_url: item.url,
-            image_url: item.socialimage || null,
+            image_url: clientImageUrl(req, item.socialimage),
           });
         }
       } catch {}
@@ -188,8 +216,9 @@ router.get('/news/:id', async (req, res, next) => {
           id: req.params.id,
           title: item.title,
           summary: item.description || item.title,
-          content: item.description ? `${item.description}\n\nRead the full report at: ${item.url}` : item.url,
+          content: item.description || item.title,
           category: 'Agriculture',
+          source: item.source?.name || null,
           published_at: item.publishedAt,
           external_url: item.url,
         });
@@ -197,7 +226,7 @@ router.get('/news/:id', async (req, res, next) => {
     }
     const { rows } = await pool.query('SELECT * FROM news_articles WHERE id = $1', [req.params.id]);
     if (!rows[0]) return res.status(404).json({ error: 'Article not found' });
-    res.json(rows[0]);
+    res.json({ ...rows[0], image_url: clientImageUrl(req, rows[0].image_url) });
   } catch (error) { next(error); }
 });
 router.get('/listings', async (req, res, next) => {
@@ -208,11 +237,31 @@ router.get('/listings', async (req, res, next) => {
     if (req.query.crop) { values.push(`%${req.query.crop}%`); filters.push(`crop_name ILIKE $${values.length}`); }
     if (req.query.category) { values.push(req.query.category); filters.push(`category = $${values.length}`); }
     const { rows } = await pool.query(`SELECT * FROM crop_listings WHERE ${filters.join(' AND ')} ORDER BY created_at DESC`, values);
-    res.json(rows);
+    res.json(rows.map(item => ({ ...item, image_url: clientImageUrl(req, item.image_url) })));
   } catch (error) { next(error); }
 });
 router.get('/listings/mine', auth(), async (req, res, next) => {
-  try { const { rows } = await pool.query('SELECT * FROM crop_listings WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]); res.json(rows); } catch (error) { next(error); }
+  try {
+    const { rows } = await pool.query('SELECT * FROM crop_listings WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+    res.json(rows.map(item => ({ ...item, image_url: clientImageUrl(req, item.image_url) })));
+  } catch (error) { next(error); }
+});
+router.get('/listings/:id/seller', auth(), async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT l.user_id, u.name, u.email, u.phone
+       FROM crop_listings l
+       JOIN users u ON u.id = l.user_id
+       WHERE l.id = $1 AND l.status = 'active'`,
+      [req.params.id],
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Active listing not found' });
+    if (Number(rows[0].user_id) === Number(req.user.id)) {
+      return res.status(403).json({ error: 'You cannot buy your own listing' });
+    }
+    const { name, email, phone } = rows[0];
+    res.json({ name, email, phone });
+  } catch (error) { next(error); }
 });
 router.post('/uploads/profile', auth(), upload.single('image'), async (req, res, next) => {
   try {

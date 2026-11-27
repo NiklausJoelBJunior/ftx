@@ -6,6 +6,12 @@ import { useApiList } from '../services/useApiList';
 import { useTheme } from '../ThemeContext';
 import { makeStyles } from '../styles';
 
+function formatPublishedDate(value) {
+  if (!value) return 'Date unavailable';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleDateString();
+}
+
 export default function NewsScreen({ navigation }) {
   const { scheme } = useTheme();
   const styles = makeStyles(scheme);
@@ -23,6 +29,8 @@ export default function NewsScreen({ navigation }) {
             {item.image_url ? <Image source={{ uri: item.image_url }} style={styles.cardImage} /> : null}
             <Text style={styles.rowText}>{item.title}</Text>
             <Text style={styles.muted} numberOfLines={2}>{item.summary}</Text>
+            <Text style={styles.muted}>{item.source || item.category} · {formatPublishedDate(item.published_at)}</Text>
+            <Text style={styles.link}>Read article →</Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={<View style={styles.emptyState}><Text style={styles.emptyText}>No news articles yet.</Text></View>}

@@ -1,7 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-// Set FTX_API_URL when building a release.
-export const API_URL = process.env.FTX_API_URL || 'https://ftx-e7l3.onrender.com/api';
+const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
+const localHost = expoHost || (Platform.OS === 'android' ? '10.0.2.2' : 'localhost');
+const defaultApiUrl = __DEV__
+  ? `http://${localHost}:4000/api`
+  : 'https://ftx-e7l3.onrender.com/api';
+
+export const API_URL = process.env.FTX_API_URL || defaultApiUrl;
 export async function api(path, options = {}) {
   const token = await AsyncStorage.getItem('ftx_token');
   const controller = new AbortController();

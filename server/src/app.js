@@ -7,6 +7,7 @@ import apiRoutes from './routes/index.js';
 import { pool } from './db/pool.js';
 
 export const app = express();
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 const directory = path.dirname(fileURLToPath(import.meta.url));

@@ -32,7 +32,9 @@ export default function AppTabs({ user, onLogout, onLogin }) {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
-      <Tabs.Screen name="Market" component={MarketScreen} options={{ tabBarIcon: ({ color }) => <TrendingUp color={color} size={22} /> }} />
+      <Tabs.Screen name="Market" options={{ tabBarIcon: ({ color }) => <TrendingUp color={color} size={22} /> }}>
+        {() => <MarketScreen user={user} />}
+      </Tabs.Screen>
       <Tabs.Screen name="Planting" component={PlantingScreen} options={{ tabBarIcon: ({ color }) => <Sprout color={color} size={22} /> }} />
       <Tabs.Screen name="News" component={NewsScreen} options={{ tabBarIcon: ({ color }) => <Newspaper color={color} size={22} /> }} />
       {user ? (
