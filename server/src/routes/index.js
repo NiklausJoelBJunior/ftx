@@ -66,6 +66,18 @@ const list = (table, order = 'id DESC') => async (req, res, next) => {
 
 router.get('/market-prices', async (req, res, next) => {
   try {
+    const values = [];
+    const filters = [];
+    if (req.query.crop) { values.push(`%${req.query.crop}%`); filters.push(`crop_name ILIKE $${values.length}`); }
+    if (req.query.category) { values.push(req.query.category); filters.push(`category = $${values.length}`); }
+    const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+    const { rows } = await pool.query(`SELECT * FROM market_prices ${where} ORDER BY updated_at DESC`, values);
+    const referenceItems = await Promise.all(rows.map(async item => ({
+      ...item,
+      source: 'Illustrative reference data',
+      image_url: clientImageUrl(req, await commonsImage(item.crop_name)),
+    })));
+
     if (process.env.MARKET_API_KEY) {
       const name = req.query.crop || 'corn';
       const response = await fetch(`https://api.api-ninjas.com/v1/commodityprice?name=${encodeURIComponent(name)}`, {
@@ -87,22 +99,12 @@ router.get('/market-prices', async (req, res, next) => {
             updated_at: new Date(),
             image_url: clientImageUrl(req, await commonsImage(item.name || name)),
           })));
-          return res.json(marketItems);
+          const externalNames = new Set(marketItems.map(item => item.crop_name.toLowerCase()));
+          return res.json([...marketItems, ...referenceItems.filter(item => !externalNames.has(item.crop_name.toLowerCase()))].slice(0, 20));
         }
       }
     }
-    const values = [];
-    const filters = [];
-    if (req.query.crop) { values.push(`%${req.query.crop}%`); filters.push(`crop_name ILIKE $${values.length}`); }
-    if (req.query.category) { values.push(req.query.category); filters.push(`category = $${values.length}`); }
-    const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
-    const { rows } = await pool.query(`SELECT * FROM market_prices ${where} ORDER BY updated_at DESC`, values);
-    const marketItems = await Promise.all(rows.map(async item => ({
-      ...item,
-      source: 'Seeded reference data',
-      image_url: clientImageUrl(req, await commonsImage(item.crop_name)),
-    })));
-    res.json(marketItems);
+    res.json(referenceItems);
   } catch (error) { next(error); }
 });
 
@@ -137,7 +139,7 @@ router.get('/planting-advisories', async (req, res, next) => {
 router.get('/news', async (req, res, next) => {
   try {
     try {
-      const gdeltResponse = await fetch('https://api.gdeltproject.org/api/v2/doc/doc?query=agriculture&mode=ArtList&maxrecords=10&format=json', { signal: AbortSignal.timeout(5000) });
+      const gdeltResponse = await fetch('https://api.gdeltproject.org/api/v2/doc/doc?query=agriculture&mode=ArtList&maxrecords=20&format=json', { signal: AbortSignal.timeout(5000) });
       if (gdeltResponse.ok) {
         const gdelt = await gdeltResponse.json();
         if (Array.isArray(gdelt.articles) && gdelt.articles.length) {
@@ -156,7 +158,7 @@ router.get('/news', async (req, res, next) => {
       }
     } catch {}
     if (process.env.NEWS_API_KEY) {
-      const response = await fetch(`https://gnews.io/api/v4/search?q=agriculture&lang=en&max=10&apikey=${encodeURIComponent(process.env.NEWS_API_KEY)}`);
+      const response = await fetch(`https://gnews.io/api/v4/search?q=agriculture&lang=en&max=20&apikey=${encodeURIComponent(process.env.NEWS_API_KEY)}`);
       if (response.ok) {
         const external = await response.json();
         if (Array.isArray(external.articles)) {
@@ -187,7 +189,7 @@ router.get('/news/:id', async (req, res, next) => {
   try {
     if (req.params.id.startsWith('external-')) {
       try {
-        const gdeltResponse = await fetch('https://api.gdeltproject.org/api/v2/doc/doc?query=agriculture&mode=ArtList&maxrecords=10&format=json', { signal: AbortSignal.timeout(5000) });
+        const gdeltResponse = await fetch('https://api.gdeltproject.org/api/v2/doc/doc?query=agriculture&mode=ArtList&maxrecords=20&format=json', { signal: AbortSignal.timeout(5000) });
         if (gdeltResponse.ok) {
           const gdelt = await gdeltResponse.json();
           const index = Number(req.params.id.replace('external-', ''));
@@ -207,7 +209,7 @@ router.get('/news/:id', async (req, res, next) => {
       } catch {}
     }
     if (req.params.id.startsWith('external-') && process.env.NEWS_API_KEY) {
-      const response = await fetch(`https://gnews.io/api/v4/search?q=agriculture&lang=en&max=10&apikey=${encodeURIComponent(process.env.NEWS_API_KEY)}`);
+      const response = await fetch(`https://gnews.io/api/v4/search?q=agriculture&lang=en&max=20&apikey=${encodeURIComponent(process.env.NEWS_API_KEY)}`);
       if (response.ok) {
         const external = await response.json();
         const index = Number(req.params.id.replace('external-', ''));

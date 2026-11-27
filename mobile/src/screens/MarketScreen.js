@@ -96,7 +96,7 @@ export default function MarketScreen({ user }) {
                   </Text>
                 </View>
               </View>
-              <Text style={styles.muted}>{item.category}</Text>
+              <Text style={styles.muted}>{item.category} · {item.source || 'Market feed'}</Text>
               <View style={[styles.row, { marginTop: 10, gap: 16 }]}>
                 <View>
                   <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '700', letterSpacing: 0.5 }}>BUY</Text>
